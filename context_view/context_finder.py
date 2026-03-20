@@ -1,8 +1,10 @@
 import requests
 from chromadb import HttpClient
 
+HEADERS = {"x-api-key": "mysecretkey"}
+
 # -------- CONFIGURATION --------
-OLLAMA_HOST    = "http://192.168.1.186:11434"
+OLLAMA_HOST    = "http://www.munalbaraili.com"
 CHROMA_HOST    = "localhost"
 CHROMA_PORT    = 8000
 CHROMA_COLLECTION = "pdf_vectors"
@@ -18,7 +20,7 @@ def embed_query(text: str) -> list[float]:
     response = requests.post(f"{OLLAMA_HOST}/api/embeddings", json={
         "model": EMBED_MODEL,
         "prompt": text
-    })
+    }, headers=HEADERS)
     return response.json()["embedding"]
 
 

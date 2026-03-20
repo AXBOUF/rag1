@@ -1,18 +1,17 @@
 import os
+import requests
 from pypdf import PdfReader
-from ollama import Client
 from chromadb import HttpClient
 
 # -------- CONFIGURATION --------
 PDF_DIR           = "./test1"               # 👈 point to your folder of PDFs
 OLLAMA_MODEL      = "mxbai-embed-large:latest"
-OLLAMA_HOST       = "http://192.168.1.186:11434"
+OLLAMA_BASE       = "http://www.munalbaraili.com"
 CHROMA_HOST       = "localhost"
 CHROMA_PORT       = 8000
-CHROMA_COLLECTION = "pdf_vectors"
+CHROMA_COLLECTION = "_vectors"
+HEADERS           = {"x-api-key": "mysecretkey"}
 # -------------------------------
-
-ollama_client = Client(host=OLLAMA_HOST)
 chroma_client = HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
 collection    = chroma_client.get_or_create_collection(name=CHROMA_COLLECTION)
 
@@ -46,8 +45,11 @@ def ingest_pdf(pdf_path: str):
 
         chunk_id  = f"{folder}__{filename}__page_{i}"
         prompt    = text.strip()[:500]
-        response  = ollama_client.embeddings(model=OLLAMA_MODEL, prompt=prompt)
-        embedding = response["embedding"]
+        response  = requests.post(f"{OLLAMA_BASE}/api/embeddings", json={
+            "model": OLLAMA_MODEL,
+            "prompt": prompt
+        }, headers=HEADERS)
+        embedding = response.json()["embedding"]
 
         ids.append(chunk_id)
         embeddings.append(embedding)

@@ -1,10 +1,12 @@
 import chromadb
 import requests
 
+HEADERS = {"x-api-key": "mysecretkey"}
+
 # --- SETUP ---
 CHROMA_HOST = "localhost"
 CHROMA_PORT = 8000
-OLLAMA_BASE = "http://192.168.1.186:11434"  # Single source of truth
+OLLAMA_BASE = "http://www.munalbaraili.com"  # Single source of truth
 
 client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
 collection = client.get_collection("pdf_vectors")
@@ -17,7 +19,7 @@ def embed_text(text):
     response = requests.post(f"{OLLAMA_BASE}/api/embeddings", json={
         "model": "mxbai-embed-large:latest",
         "prompt": text
-    })
+    }, headers=HEADERS)
     return response.json()["embedding"]
 
 query_embedding = embed_text(query)
@@ -45,7 +47,7 @@ Answer:"""
         "model": "qwen2.5:7b",
         "prompt": prompt,
         "stream": False
-    })
+    }, headers=HEADERS)
     return response.json()["response"]
 
 answer = ask_llm(context_text, query)
