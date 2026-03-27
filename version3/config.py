@@ -29,5 +29,18 @@ CHUNK_OVERLAP = 200
 # -------- TEST DATA --------
 TEST_DATA_DIR = "version3/test_data"
 
+# -------- BRANDING --------
+APP_NAME = "RAG Assistant"
+APP_LOGO_TEXT = "R"  # Single letter/emoji for logo
+# To use an image instead, set this path (relative to version3/):
+# APP_LOGO_IMAGE = "assets/logo.png"
+APP_LOGO_IMAGE = None
+
+# -------- THEME COLORS --------
+# Override these to customize the login page gradient
+BRAND_PRIMARY = "#0a84ff"    # Apple blue
+BRAND_SECONDARY = "#5856d6"  # Apple purple
+BRAND_SUCCESS = "#30d158"    # Apple green
+
 # NOTE: These settings match your working version2 setup.
 # Docker and Ollama are already configured and running.

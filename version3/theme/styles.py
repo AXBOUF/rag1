@@ -77,6 +77,73 @@ CUSTOM_CSS = """
         padding-top: 2rem;
     }
     
+    /* Login/Register card container */
+    .login-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 80vh;
+        padding: 2rem;
+    }
+    
+    .login-card {
+        background: var(--apple-surface);
+        border: 1px solid var(--apple-border);
+        border-radius: 16px;
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+    }
+    
+    .login-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .login-logo {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, var(--apple-blue), #5856d6);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+    }
+    
+    .login-title {
+        color: var(--apple-text);
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: -0.02em;
+    }
+    
+    .login-subtitle {
+        color: var(--apple-text-secondary);
+        font-size: 14px;
+        margin-top: 8px;
+    }
+    
+    .login-divider {
+        border: none;
+        border-top: 1px solid var(--apple-border);
+        margin: 1.5rem 0;
+    }
+    
+    .login-footer {
+        text-align: center;
+        color: var(--apple-text-secondary);
+        font-size: 13px;
+    }
+    
+    .login-footer a {
+        color: var(--apple-blue);
+        text-decoration: none;
+    }
+    
     /* Sidebar - Apple style */
     [data-testid="stSidebar"] {
         background-color: var(--apple-surface) !important;

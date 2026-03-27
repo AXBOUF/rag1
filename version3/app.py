@@ -55,68 +55,126 @@ if "audit_logger" not in st.session_state:
 
 def show_login():
     """Display login page."""
-    st.markdown("## Login")
+    # Hide sidebar on login
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] { display: none; }
+            .main .block-container { max-width: 100%; padding: 0; }
+        </style>
+    """, unsafe_allow_html=True)
     
-    with st.form("login_form"):
-        username = st.text_input("Username", placeholder="Enter username")
-        password = st.text_input("Password", type="password", placeholder="Enter password")
-        submit = st.form_submit_button("Login", use_container_width=True)
+    # Centered container
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    
+    with col2:
+        st.markdown("<div style='height: 10vh'></div>", unsafe_allow_html=True)
         
-        if submit:
-            if username and password:
-                user = authenticate(username, password)
-                if user:
-                    st.session_state.authenticated = True
-                    st.session_state.user = user
-                    st.session_state.messages = []
-                    st.rerun()
+        # Card header with logo
+        st.markdown("""
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 64px; height: 64px; margin: 0 auto 1rem; 
+                    background: linear-gradient(135deg, #0a84ff, #5856d6); 
+                    border-radius: 16px; display: flex; align-items: center; 
+                    justify-content: center; font-size: 28px;">
+                    R
+                </div>
+                <h2 style="color: #f5f5f7; margin: 0; font-weight: 600;">Welcome Back</h2>
+                <p style="color: #86868b; font-size: 14px; margin-top: 8px;">Sign in to continue</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("login_form"):
+            username = st.text_input("Username", placeholder="Enter username", label_visibility="collapsed")
+            password = st.text_input("Password", type="password", placeholder="Enter password", label_visibility="collapsed")
+            
+            st.markdown("<div style='height: 0.5rem'></div>", unsafe_allow_html=True)
+            submit = st.form_submit_button("Sign In", use_container_width=True)
+            
+            if submit:
+                if username and password:
+                    user = authenticate(username, password)
+                    if user:
+                        st.session_state.authenticated = True
+                        st.session_state.user = user
+                        st.session_state.messages = []
+                        st.rerun()
+                    else:
+                        st.error("Invalid credentials")
                 else:
-                    st.error("Invalid credentials")
-            else:
-                st.error("Enter username and password")
-    
-    st.markdown("---")
-    st.caption("New user?")
-    if st.button("Register", use_container_width=True):
-        st.session_state.page = "register"
-        st.rerun()
+                    st.error("Enter username and password")
+        
+        st.markdown("<hr style='border: none; border-top: 1px solid #38383a; margin: 1.5rem 0;'>", unsafe_allow_html=True)
+        
+        st.markdown("<p style='text-align: center; color: #86868b; font-size: 13px;'>Don't have an account?</p>", unsafe_allow_html=True)
+        if st.button("Create Account", use_container_width=True, type="secondary"):
+            st.session_state.page = "register"
+            st.rerun()
 
 
 def show_register():
     """Display registration page."""
-    st.markdown("## Register")
+    # Hide sidebar on register
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] { display: none; }
+            .main .block-container { max-width: 100%; padding: 0; }
+        </style>
+    """, unsafe_allow_html=True)
     
-    with st.form("register_form"):
-        username = st.text_input("Username", placeholder="Choose username")
-        password = st.text_input("Password", type="password", placeholder="Choose password")
-        confirm = st.text_input("Confirm Password", type="password", placeholder="Confirm password")
+    # Centered container
+    col1, col2, col3 = st.columns([1, 1.2, 1])
+    
+    with col2:
+        st.markdown("<div style='height: 8vh'></div>", unsafe_allow_html=True)
         
-        role = st.selectbox(
-            "Role",
-            options=["Employee", "Manager", "Admin"],
-            index=0
-        )
+        # Card header
+        st.markdown("""
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div style="width: 64px; height: 64px; margin: 0 auto 1rem; 
+                    background: linear-gradient(135deg, #30d158, #34c759); 
+                    border-radius: 16px; display: flex; align-items: center; 
+                    justify-content: center; font-size: 28px;">
+                    +
+                </div>
+                <h2 style="color: #f5f5f7; margin: 0; font-weight: 600;">Create Account</h2>
+                <p style="color: #86868b; font-size: 14px; margin-top: 8px;">Register to get started</p>
+            </div>
+        """, unsafe_allow_html=True)
         
-        submit = st.form_submit_button("Register", use_container_width=True)
-        
-        if submit:
-            if not username or not password:
-                st.error("All fields required")
-            elif password != confirm:
-                st.error("Passwords do not match")
-            else:
-                success, msg = register_user(username, password, role.lower())
-                if success:
-                    st.success("Registered. Please login.")
-                    st.session_state.page = "login"
-                    st.rerun()
+        with st.form("register_form"):
+            username = st.text_input("Username", placeholder="Choose username", label_visibility="collapsed")
+            password = st.text_input("Password", type="password", placeholder="Choose password", label_visibility="collapsed")
+            confirm = st.text_input("Confirm", type="password", placeholder="Confirm password", label_visibility="collapsed")
+            
+            role = st.selectbox(
+                "Role",
+                options=["Employee", "Manager", "Admin"],
+                index=0
+            )
+            
+            st.markdown("<div style='height: 0.5rem'></div>", unsafe_allow_html=True)
+            submit = st.form_submit_button("Create Account", use_container_width=True)
+            
+            if submit:
+                if not username or not password:
+                    st.error("All fields required")
+                elif password != confirm:
+                    st.error("Passwords do not match")
                 else:
-                    st.error(msg)
-    
-    st.markdown("---")
-    if st.button("Back to Login", use_container_width=True):
-        st.session_state.page = "login"
-        st.rerun()
+                    success, msg = register_user(username, password, role.lower())
+                    if success:
+                        st.success("Account created! Please sign in.")
+                        st.session_state.page = "login"
+                        st.rerun()
+                    else:
+                        st.error(msg)
+        
+        st.markdown("<hr style='border: none; border-top: 1px solid #38383a; margin: 1.5rem 0;'>", unsafe_allow_html=True)
+        
+        st.markdown("<p style='text-align: center; color: #86868b; font-size: 13px;'>Already have an account?</p>", unsafe_allow_html=True)
+        if st.button("Sign In", use_container_width=True, type="secondary"):
+            st.session_state.page = "login"
+            st.rerun()
 
 
 @st.cache_resource
