@@ -6,7 +6,7 @@ HEADERS = {"x-api-key": "mysecretkey"}
 # --- SETUP ---
 CHROMA_HOST = "localhost"
 CHROMA_PORT = 8000
-OLLAMA_BASE = "http://www.munalbaraili.com"  # Single source of truth
+OLLAMA_BASE = "https://www.munalbaraili.com"
 
 client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
 collection = client.get_collection("pdf_vectors")
@@ -14,17 +14,19 @@ collection = client.get_collection("pdf_vectors")
 # --- STEP 1: Get user question ---
 query = input("Ask a question: ")
 
-# --- STEP 2: Embed query using Ollama ---
+# --- STEP 2: Embed query ---
 def embed_text(text):
-    response = requests.post(f"{OLLAMA_BASE}/api/embeddings", json={
+    response = requests.post(f"{OLLAMA_BASE}/embed", json={
         "model": "mxbai-embed-large:latest",
-        "prompt": text
+        "text": text
     }, headers=HEADERS)
+    print(response.status_code)  # 👈 did you add this?
+    print(response.json())       # 👈 and this?
     return response.json()["embedding"]
 
 query_embedding = embed_text(query)
 
-# --- STEP 3: Search Chroma for relevant chunks ---
+# --- STEP 3: Search Chroma ---
 results = collection.query(
     query_embeddings=[query_embedding],
     n_results=3
@@ -33,7 +35,7 @@ results = collection.query(
 contexts = results["documents"][0]
 context_text = "\n\n".join(contexts)
 
-# --- STEP 4: Ask LLM (via Ollama) with context ---
+# --- STEP 4: Ask LLM ---
 def ask_llm(context, question):
     prompt = f"""Answer the question based on the context below.
 
@@ -43,10 +45,9 @@ Context:
 Question: {question}
 Answer:"""
 
-    response = requests.post(f"{OLLAMA_BASE}/api/generate", json={
+    response = requests.post(f"{OLLAMA_BASE}/llm", json={
         "model": "qwen2.5:7b",
-        "prompt": prompt,
-        "stream": False
+        "prompt": prompt
     }, headers=HEADERS)
     return response.json()["response"]
 

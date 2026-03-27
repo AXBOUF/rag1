@@ -16,10 +16,12 @@ query = input("Ask a question: ")
 
 # --- STEP 2: Embed query using Ollama ---
 def embed_text(text):
-    response = requests.post(f"{OLLAMA_BASE}/api/embeddings", json={
+    response = requests.post(f"{OLLAMA_BASE}/embed", json={
         "model": "mxbai-embed-large:latest",
-        "prompt": text
+        "text": text
     }, headers=HEADERS)
+    print(response.status_code)  # 👈 did you add this?
+    print(response.json())       # 👈 and this?
     return response.json()["embedding"]
 
 query_embedding = embed_text(query)
@@ -43,13 +45,14 @@ Context:
 Question: {question}
 Answer:"""
 
-    response = requests.post(f"{OLLAMA_BASE}/api/generate", json={
+    response = requests.post(f"{OLLAMA_BASE}/llm", json={
         "model": "qwen2.5:7b",
-        "prompt": prompt,
-        "stream": False
+        "prompt": prompt  # "text" -> "prompt"
     }, headers=HEADERS)
+    print(response.status_code)
+    print(response.json())
     return response.json()["response"]
-
+    
 answer = ask_llm(context_text, query)
 print("\n🧠 Answer:")
 print(answer)

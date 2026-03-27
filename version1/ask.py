@@ -9,7 +9,7 @@ CHROMA_PORT = 8000
 OLLAMA_BASE = "https://www.munalbaraili.com"  # Single source of truth
 
 client = chromadb.HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
-collection = client.get_collection("transport_vectors")
+collection = client.get_collection("pdf_vectors")
 
 # --- STEP 1: Get user question ---
 query = input("Ask a question: ")

@@ -17,7 +17,7 @@ collection    = chroma_client.get_collection(name=CHROMA_COLLECTION)
 
 
 def embed_query(text: str) -> list[float]:
-    response = requests.post(f"{OLLAMA_HOST}/api/embeddings", json={
+    response = requests.post(f"{OLLAMA_HOST}/embed", json={
         "model": EMBED_MODEL,
         "prompt": text
     }, headers=HEADERS)
