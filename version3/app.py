@@ -270,61 +270,73 @@ def process_uploaded_files(uploaded_files, collection):
 
 
 def show_main():
-    """Display main application."""
+    """Display main application with tabbed navigation."""
     user = st.session_state.user
     role = user["role"]
     username = user["username"]
     
-    # Sidebar
+    # Initialize current tab
+    if "current_tab" not in st.session_state:
+        st.session_state.current_tab = "Chat"
+    
+    # Sidebar navigation
     with st.sidebar:
-        st.markdown(f"### {username}")
-        st.caption(f"{role.upper()}")
-        
-        # Access levels
-        allowed_levels = ROLE_ACCESS[role]
-        access_text = " / ".join([l.upper() for l in allowed_levels])
-        st.caption(f"Access: {access_text}")
+        # User info header
+        st.markdown(f"""
+            <div style="text-align: center; padding: 1rem 0;">
+                <div style="width: 48px; height: 48px; margin: 0 auto 0.5rem; 
+                    background: linear-gradient(135deg, #0a84ff, #5856d6); 
+                    border-radius: 50%; display: flex; align-items: center; 
+                    justify-content: center; font-size: 20px; color: white; font-weight: 600;">
+                    {username[0].upper()}
+                </div>
+                <p style="margin: 0; color: #f5f5f7; font-weight: 500;">{username}</p>
+                <p style="margin: 0; color: #86868b; font-size: 12px;">{role.upper()}</p>
+            </div>
+        """, unsafe_allow_html=True)
         
         st.divider()
         
-        # Admin upload
-        if role == "admin":
-            st.markdown("#### Upload")
-            
-            uploaded_files = st.file_uploader(
-                "PDF files",
-                type=["pdf"],
-                accept_multiple_files=True,
-                label_visibility="collapsed"
-            )
-            
-            if uploaded_files and st.button("Process", use_container_width=True):
-                process_uploaded_files(uploaded_files, get_chromadb())
-            
-            st.divider()
-            
-            # User management
-            with st.expander("Users"):
-                users = list_users()
-                for u in users:
-                    st.caption(f"{u['username']} - {u['role']}")
-            
-            st.divider()
+        # Navigation menu
+        st.markdown("#### Menu")
         
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Clear", use_container_width=True):
-                st.session_state.messages = []
+        nav_items = ["Chat", "Profile", "Settings"]
+        if role == "admin":
+            nav_items.append("Admin")
+        
+        for item in nav_items:
+            is_active = st.session_state.current_tab == item
+            btn_type = "primary" if is_active else "secondary"
+            if st.button(item, use_container_width=True, type=btn_type, key=f"nav_{item}"):
+                st.session_state.current_tab = item
                 st.rerun()
-        with col2:
-            if st.button("Logout", use_container_width=True):
-                st.session_state.authenticated = False
-                st.session_state.user = None
-                st.session_state.messages = []
-                st.session_state.page = "login"
-                st.rerun()
+        
+        st.divider()
+        
+        # Logout at bottom
+        if st.button("Sign Out", use_container_width=True):
+            st.session_state.authenticated = False
+            st.session_state.user = None
+            st.session_state.messages = []
+            st.session_state.page = "login"
+            st.rerun()
     
-    # Main content
+    # Main content based on selected tab
+    if st.session_state.current_tab == "Chat":
+        show_chat_tab(username, role)
+    elif st.session_state.current_tab == "Profile":
+        show_profile_tab(username, role)
+    elif st.session_state.current_tab == "Settings":
+        show_settings_tab()
+    elif st.session_state.current_tab == "Admin":
+        show_admin_tab()
+
+
+def show_chat_tab(username, role):
+    """Chat assistant tab."""
+    st.markdown("### Assistant")
+    st.caption(f"Access: {' / '.join([l.upper() for l in ROLE_ACCESS[role]])}")
+    
     collection = get_chromadb()
     
     if collection is None:
@@ -340,7 +352,7 @@ def show_main():
                 meta_count = len(message["metadatas"])
                 filtered = message.get("filtered_count", 0)
                 
-                with st.expander(f"Context ({meta_count} chunks)"):
+                with st.expander(f"Sources ({meta_count})"):
                     for i, meta in enumerate(message["metadatas"], 1):
                         level = meta.get("sensitivity_level", "unknown").upper()
                         fname = meta.get("filename", "unknown")
@@ -348,7 +360,7 @@ def show_main():
                         st.caption(f"{i}. [{level}] {fname} p.{page}")
                     
                     if filtered > 0:
-                        st.caption(f"{filtered} chunks filtered")
+                        st.caption(f"{filtered} filtered")
     
     # Chat input
     if prompt := st.chat_input("Ask a question..."):
@@ -388,6 +400,180 @@ def show_main():
                         "role": "assistant",
                         "content": f"Error: {str(e)}",
                     })
+    
+    # Clear chat button
+    col1, col2, col3 = st.columns([1, 1, 3])
+    with col1:
+        if st.button("Clear Chat"):
+            st.session_state.messages = []
+            st.rerun()
+
+
+def show_profile_tab(username, role):
+    """User profile tab (mock)."""
+    st.markdown("### Profile")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        # Profile picture placeholder
+        st.markdown(f"""
+            <div style="width: 120px; height: 120px; margin: 0 auto; 
+                background: linear-gradient(135deg, #0a84ff, #5856d6); 
+                border-radius: 50%; display: flex; align-items: center; 
+                justify-content: center; font-size: 48px; color: white; font-weight: 600;">
+                {username[0].upper()}
+            </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<div style='height: 1rem'></div>", unsafe_allow_html=True)
+        st.button("Change Photo", use_container_width=True, disabled=True)
+    
+    with col2:
+        st.markdown("#### Account Information")
+        
+        # Mock form
+        with st.form("profile_form"):
+            st.text_input("Username", value=username, disabled=True)
+            st.text_input("Email", value=f"{username}@company.com", disabled=True)
+            st.text_input("Department", value="Operations", disabled=True)
+            st.selectbox("Role", options=[role.title()], disabled=True)
+            st.text_input("Phone", placeholder="+1 (555) 000-0000")
+            
+            st.form_submit_button("Save Changes", disabled=True)
+    
+    st.divider()
+    
+    st.markdown("#### Activity")
+    st.caption("Recent activity will appear here")
+    
+    # Mock activity items
+    activities = [
+        {"action": "Logged in", "time": "Just now"},
+        {"action": "Queried documents", "time": "2 minutes ago"},
+        {"action": "Updated profile", "time": "1 hour ago"},
+    ]
+    
+    for act in activities:
+        st.markdown(f"""
+            <div style="padding: 0.5rem 0; border-bottom: 1px solid #38383a;">
+                <span style="color: #f5f5f7;">{act['action']}</span>
+                <span style="color: #86868b; float: right; font-size: 12px;">{act['time']}</span>
+            </div>
+        """, unsafe_allow_html=True)
+
+
+def show_settings_tab():
+    """Settings tab (mock)."""
+    st.markdown("### Settings")
+    
+    # Appearance
+    st.markdown("#### Appearance")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.selectbox("Theme", options=["Dark", "Light", "System"], index=0, disabled=True)
+    with col2:
+        st.selectbox("Language", options=["English", "Spanish", "French"], index=0, disabled=True)
+    
+    st.divider()
+    
+    # Notifications
+    st.markdown("#### Notifications")
+    st.toggle("Email notifications", value=True, disabled=True)
+    st.toggle("Push notifications", value=False, disabled=True)
+    st.toggle("Weekly digest", value=True, disabled=True)
+    
+    st.divider()
+    
+    # Privacy
+    st.markdown("#### Privacy & Security")
+    st.toggle("Two-factor authentication", value=False, disabled=True)
+    st.toggle("Show online status", value=True, disabled=True)
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.button("Change Password", use_container_width=True, disabled=True)
+    with col2:
+        st.button("Export Data", use_container_width=True, disabled=True)
+    
+    st.divider()
+    
+    # About
+    st.markdown("#### About")
+    st.caption("RAG Assistant v3.0")
+    st.caption("Privacy-aware document retrieval system")
+
+
+def show_admin_tab():
+    """Admin panel tab."""
+    st.markdown("### Admin Panel")
+    
+    # Sub-tabs for admin
+    admin_tab = st.radio(
+        "Section",
+        options=["Documents", "Users", "Logs"],
+        horizontal=True,
+        label_visibility="collapsed"
+    )
+    
+    st.divider()
+    
+    if admin_tab == "Documents":
+        st.markdown("#### Upload Documents")
+        
+        uploaded_files = st.file_uploader(
+            "PDF files",
+            type=["pdf"],
+            accept_multiple_files=True,
+            label_visibility="collapsed"
+        )
+        
+        if uploaded_files and st.button("Process & Classify", use_container_width=False):
+            process_uploaded_files(uploaded_files, get_chromadb())
+        
+        st.divider()
+        
+        st.markdown("#### Collection Stats")
+        try:
+            collection = get_chromadb()
+            if collection:
+                count = collection.count()
+                st.metric("Total Documents", count)
+        except:
+            st.caption("Unable to fetch stats")
+    
+    elif admin_tab == "Users":
+        st.markdown("#### Registered Users")
+        
+        users = list_users()
+        
+        # Display as table
+        if users:
+            for u in users:
+                col1, col2, col3 = st.columns([2, 1, 1])
+                with col1:
+                    st.markdown(f"**{u['username']}**")
+                with col2:
+                    role_color = {"admin": "#ff453a", "manager": "#ff9f0a", "employee": "#30d158"}
+                    st.markdown(f"<span style='color: {role_color.get(u['role'], '#86868b')}'>{u['role'].upper()}</span>", unsafe_allow_html=True)
+                with col3:
+                    st.caption(u.get('created_at', 'N/A')[:10] if u.get('created_at') else 'N/A')
+        else:
+            st.caption("No users found")
+    
+    elif admin_tab == "Logs":
+        st.markdown("#### Audit Logs")
+        
+        logs = st.session_state.audit_logger.get_recent_logs(limit=20)
+        
+        if logs:
+            for log in logs:
+                with st.expander(f"{log.get('user_id', 'unknown')} - {log.get('query', '')[:50]}..."):
+                    st.caption(f"Time: {log.get('timestamp', 'N/A')}")
+                    st.caption(f"Role: {log.get('user_role', 'N/A')}")
+                    st.caption(f"Status: {log.get('status', 'N/A')}")
+                    st.caption(f"Retrieved: {log.get('retrieved_count', 0)} | Filtered: {log.get('filtered_count', 0)}")
+        else:
+            st.caption("No logs available")
 
 
 # Router
