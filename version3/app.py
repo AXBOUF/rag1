@@ -5,14 +5,20 @@ Clean minimal dark theme with role-based access control demo.
 
 import streamlit as st
 import sys
+import tempfile
+import os
+import requests
 from pathlib import Path
 from chromadb import HttpClient
+from pypdf import PdfReader
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from query_with_privacy import query_with_role
 from utils.audit_log import AuditLogger
+from utils.classifier import ContentClassifier
+from utils.metadata import create_chunk_metadata
 from theme.styles import CUSTOM_CSS, get_sensitivity_badge_html, get_role_badge_html
 from theme.constants import (
     CHROMA_HOST,
@@ -21,7 +27,11 @@ from theme.constants import (
     STATUS_ICONS,
     ROLE_ACCESS,
     ROLE_ICONS,
+    SENSITIVITY_ICONS,
 )
+from config import OLLAMA_BASE, EMBED_MODEL, API_KEY, CHUNK_SIZE
+
+HEADERS = {"x-api-key": API_KEY}
 
 # Page config
 st.set_page_config(
@@ -56,6 +66,108 @@ def get_chromadb():
         st.error(f"Failed to connect to ChromaDB: {e}")
         st.info("Make sure you've run: `python version3/ingest_with_privacy.py`")
         return None
+
+
+def get_embedding(text: str) -> list[float]:
+    """Get embedding vector from Ollama."""
+    text_for_embedding = text[:CHUNK_SIZE] if len(text) > CHUNK_SIZE else text
+    response = requests.post(
+        f"{OLLAMA_BASE}/embed",
+        json={"model": EMBED_MODEL, "text": text_for_embedding},
+        headers=HEADERS,
+        timeout=30
+    )
+    if response.status_code != 200:
+        raise Exception(f"Embedding API returned status {response.status_code}")
+    return response.json()["embedding"]
+
+
+def process_uploaded_files(uploaded_files, collection):
+    """Process uploaded PDF files with classification (Admin only)."""
+    if collection is None:
+        st.error("ChromaDB not connected!")
+        return
+    
+    classifier = ContentClassifier()
+    total_chunks = 0
+    level_counts = {"public": 0, "internal": 0, "confidential": 0}
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    for file_idx, uploaded_file in enumerate(uploaded_files):
+        status_text.text(f"📄 Processing: {uploaded_file.name}")
+        
+        # Save to temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(uploaded_file.getbuffer())
+            tmp_path = tmp.name
+        
+        try:
+            reader = PdfReader(tmp_path)
+            filename = uploaded_file.name
+            
+            ids, embeddings, metadatas, documents = [], [], [], []
+            
+            for page_num, page in enumerate(reader.pages):
+                text = page.extract_text()
+                if not text or not text.strip():
+                    continue
+                
+                text = text.strip()
+                
+                # Classify chunk
+                status_text.text(f"🔍 Classifying: {filename} (page {page_num + 1})")
+                sensitivity_level = classifier.classify_chunk(text)
+                level_counts[sensitivity_level] += 1
+                total_chunks += 1
+                
+                # Generate ID and embedding
+                chunk_id = f"upload__{filename}__page_{page_num}"
+                embedding = get_embedding(text)
+                
+                # Create metadata
+                metadata = create_chunk_metadata(
+                    filename=filename,
+                    folder="uploads",
+                    path=f"uploads/{filename}",
+                    page=page_num,
+                    chunk_index=total_chunks - 1,
+                    sensitivity_level=sensitivity_level,
+                    document_source="web_upload",
+                    classified_by="llm",
+                )
+                
+                ids.append(chunk_id)
+                embeddings.append(embedding)
+                metadatas.append(metadata)
+                documents.append(text[:CHUNK_SIZE])
+            
+            # Add to ChromaDB
+            if ids:
+                collection.add(
+                    ids=ids,
+                    embeddings=embeddings,
+                    metadatas=metadatas,
+                    documents=documents,
+                )
+        
+        finally:
+            os.unlink(tmp_path)  # Clean up temp file
+        
+        progress_bar.progress((file_idx + 1) / len(uploaded_files))
+    
+    progress_bar.empty()
+    status_text.empty()
+    
+    # Show results
+    st.success(f"✅ Processed {len(uploaded_files)} file(s), {total_chunks} chunks")
+    st.markdown(f"""
+    **Classification Results:**
+    - 🟢 PUBLIC: {level_counts['public']}
+    - 🟡 INTERNAL: {level_counts['internal']}
+    - 🔒 CONFIDENTIAL: {level_counts['confidential']}
+    """)
 
 
 # Sidebar
@@ -95,6 +207,23 @@ with st.sidebar:
         else:
             icon = "🟢" if level == "public" else ("🟡" if level == "internal" else "🔒")
             st.markdown(f"{icon} {level.upper()} ❌")
+    
+    st.divider()
+    
+    # Admin-only file upload
+    if st.session_state.role == "admin":
+        st.subheader(f"{STATUS_ICONS['upload']} Upload Documents")
+        st.caption("👑 Admin only")
+        
+        uploaded_files = st.file_uploader(
+            "Upload PDF files",
+            type=["pdf"],
+            accept_multiple_files=True,
+            help="Upload PDFs to ingest with automatic classification"
+        )
+        
+        if uploaded_files and st.button(f"{STATUS_ICONS['brain']} Process & Classify", use_container_width=True):
+            process_uploaded_files(uploaded_files, get_chromadb())
     
     st.divider()
     
