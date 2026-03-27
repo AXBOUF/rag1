@@ -59,6 +59,7 @@ class AuditLogger:
         execution_time_ms: int,
         status: str = "success",
         additional_info: Optional[dict] = None,
+        user_id: str = "anonymous",
     ):
         """
         Log a query and its results.
@@ -72,6 +73,7 @@ class AuditLogger:
             execution_time_ms: Query execution time in milliseconds
             status: Query status (success/error/filtered)
             additional_info: Optional additional information
+            user_id: Username of the user making the query
         """
         timestamp = datetime.utcnow().isoformat()
         
@@ -86,6 +88,7 @@ class AuditLogger:
         
         log_entry = {
             "timestamp": timestamp,
+            "user_id": user_id,
             "user_role": user_role,
             "query": query,
             "retrieved_count": len(retrieved_docs),

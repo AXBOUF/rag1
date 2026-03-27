@@ -60,6 +60,7 @@ def query_with_role(
     collection,
     top_k: int = 3,
     audit_logger: AuditLogger = None,
+    user_id: str = "anonymous",
 ) -> dict:
     """
     Query the RAG system with role-based access control.
@@ -70,6 +71,7 @@ def query_with_role(
         collection: ChromaDB collection
         top_k: Number of results to retrieve
         audit_logger: Optional audit logger
+        user_id: Username for audit logging
         
     Returns:
         Dictionary with response, retrieved docs, and metadata
@@ -176,6 +178,7 @@ def query_with_role(
                 response=answer,
                 execution_time_ms=execution_time_ms,
                 status="success",
+                user_id=user_id,
             )
         
         return {
@@ -201,6 +204,7 @@ def query_with_role(
                 response=f"Error: {e}",
                 execution_time_ms=execution_time_ms,
                 status="error",
+                user_id=user_id,
             )
         
         raise
