@@ -341,21 +341,8 @@ def get_sensitivity_color(level: str) -> str:
 def get_sensitivity_badge_html(level: str) -> str:
     """Generate HTML for sensitivity badge."""
     level_lower = level.lower()
-    icon = {
-        "public": "🟢",
-        "internal": "🟡",
-        "confidential": "🔒"
-    }.get(level_lower, "❓")
-    
-    return f'<span class="badge badge-{level_lower}">{icon} {level.upper()}</span>'
+    return f'<span class="badge badge-{level_lower}">{level.upper()}</span>'
 
 def get_role_badge_html(role: str) -> str:
     """Generate HTML for role badge."""
-    role_lower = role.lower()
-    icon = {
-        "employee": "👤",
-        "manager": "👔",
-        "admin": "👑"
-    }.get(role_lower, "👤")
-    
-    return f'{icon} <strong>{role.title()}</strong>'
+    return f'<strong>{role.upper()}</strong>'
