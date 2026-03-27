@@ -76,6 +76,20 @@ cp your-documents/*.pdf version3/test_data/
 python version3/ingest_with_privacy.py
 ```
 
+**Options:**
+- `--dir PATH` - Custom directory (default: version3/test_data/)
+- `--flush` - Delete existing collection before ingesting (fresh start)
+
+**Re-run with fresh start:**
+```bash
+# Option 1: Use --flush flag
+python version3/ingest_with_privacy.py --flush
+
+# Option 2: Manual flush first
+python version3/manage_collection.py flush
+python version3/ingest_with_privacy.py
+```
+
 This will:
 - Process all PDFs in test_data/
 - Classify each chunk using LLM
@@ -274,6 +288,30 @@ python audit_log.py
 4. Use GPU acceleration for Ollama
 
 ## 🔧 Configuration
+
+### Collection Management
+
+**View all collections:**
+```bash
+python version3/manage_collection.py list
+```
+
+**View collection statistics:**
+```bash
+python version3/manage_collection.py stats
+```
+
+**Flush (delete) a collection:**
+```bash
+# With confirmation prompt
+python version3/manage_collection.py flush
+
+# Skip confirmation (use with caution!)
+python version3/manage_collection.py flush --yes
+
+# Flush a specific collection
+python version3/manage_collection.py flush --collection my_collection
+```
 
 ### Environment Variables
 

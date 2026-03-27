@@ -162,12 +162,13 @@ def ingest_pdf(
         return (0, 0, 0, 0)
 
 
-def main(pdf_dir: str = "version3/test_data"):
+def main(pdf_dir: str = "version3/test_data", flush: bool = False):
     """
     Main ingestion function.
     
     Args:
         pdf_dir: Directory containing PDFs to ingest
+        flush: If True, delete existing collection before ingesting
     """
     print(f"{STATUS_ICONS['brain']} Privacy-Aware RAG Ingestion")
     print(f"{STATUS_ICONS['info']} Using LLM-based classification\n")
@@ -176,6 +177,15 @@ def main(pdf_dir: str = "version3/test_data"):
     print(f"{STATUS_ICONS['progress']} Connecting to ChromaDB at {CHROMA_HOST}:{CHROMA_PORT}...")
     try:
         chroma_client = HttpClient(host=CHROMA_HOST, port=CHROMA_PORT)
+        
+        # Flush collection if requested
+        if flush:
+            try:
+                chroma_client.delete_collection(name=COLLECTION_NAME)
+                print(f"{STATUS_ICONS['success']} Flushed existing collection: {COLLECTION_NAME}")
+            except Exception:
+                pass  # Collection doesn't exist, that's fine
+        
         collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME)
         print(f"{STATUS_ICONS['success']} Connected to collection: {COLLECTION_NAME}\n")
     except Exception as e:
@@ -238,7 +248,12 @@ if __name__ == "__main__":
         default="version3/test_data",
         help="Directory containing PDFs (default: version3/test_data)"
     )
+    parser.add_argument(
+        "--flush",
+        action="store_true",
+        help="Delete existing collection before ingesting (fresh start)"
+    )
     
     args = parser.parse_args()
     
-    main(pdf_dir=args.dir)
+    main(pdf_dir=args.dir, flush=args.flush)
