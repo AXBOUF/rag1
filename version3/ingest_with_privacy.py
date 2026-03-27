@@ -71,13 +71,17 @@ def ingest_pdf(
     classifier: ContentClassifier,
     collection,
     base_dir: str,
-) -> tuple[int, int, int, int]:
+    existing_ids: set = None,
+) -> tuple[int, int, int, int, int]:
     """
     Ingest a single PDF with privacy classification.
     
     Returns:
-        Tuple of (total_chunks, public_count, internal_count, confidential_count)
+        Tuple of (total_chunks, public_count, internal_count, confidential_count, skipped_count)
     """
+    if existing_ids is None:
+        existing_ids = set()
+    
     try:
         reader = PdfReader(pdf_path)
         filename = os.path.basename(pdf_path)
@@ -90,12 +94,22 @@ def ingest_pdf(
         
         # Statistics
         total_chunks = 0
+        skipped_chunks = 0
         level_counts = {"public": 0, "internal": 0, "confidential": 0}
         
         print(f"\n{STATUS_ICONS['document']} Ingesting: {pdf_path}")
         print(f"   Pages: {len(reader.pages)}")
         
         for page_num, page in enumerate(reader.pages):
+            # Generate chunk ID first to check if it exists
+            chunk_id = f"{folder}__{filename}__page_{page_num}"
+            
+            # Skip if already exists
+            if chunk_id in existing_ids:
+                skipped_chunks += 1
+                print(f"   {STATUS_ICONS['success']} Page {page_num + 1} already exists, skipping")
+                continue
+            
             text = page.extract_text()
             if not text or not text.strip():
                 continue
@@ -105,14 +119,11 @@ def ingest_pdf(
             # Classify the chunk using LLM
             print(f"   {STATUS_ICONS['progress']} Classifying page {page_num + 1}...", end=" ")
             sensitivity_level = classifier.classify_chunk(text)
-            print(f"{SENSITIVITY_ICONS.get(sensitivity_level, '❓')} {sensitivity_level.upper()}")
+            print(f"{SENSITIVITY_ICONS.get(sensitivity_level, '?')} {sensitivity_level.upper()}")
             
             # Update statistics
             level_counts[sensitivity_level] += 1
             total_chunks += 1
-            
-            # Create chunk ID
-            chunk_id = f"{folder}__{filename}__page_{page_num}"
             
             # Get embedding
             embedding = get_embedding(text)
@@ -145,8 +156,10 @@ def ingest_pdf(
                 metadatas=metadatas,
                 documents=documents,
             )
-            print(f"   {STATUS_ICONS['success']} Stored {len(ids)} chunks")
+            print(f"   {STATUS_ICONS['success']} Stored {len(ids)} new chunks")
             print(f"   🟢 PUBLIC: {level_counts['public']} | 🟡 INTERNAL: {level_counts['internal']} | 🔒 CONFIDENTIAL: {level_counts['confidential']}")
+        elif skipped_chunks > 0:
+            print(f"   {STATUS_ICONS['success']} All {skipped_chunks} pages already ingested")
         else:
             print(f"   {STATUS_ICONS['warning']} No text content found")
         
@@ -154,24 +167,40 @@ def ingest_pdf(
             total_chunks,
             level_counts["public"],
             level_counts["internal"],
-            level_counts["confidential"]
+            level_counts["confidential"],
+            skipped_chunks
         )
     
     except Exception as e:
         print(f"   {STATUS_ICONS['error']} Failed: {e}")
-        return (0, 0, 0, 0)
+        return (0, 0, 0, 0, 0)
 
 
-def main(pdf_dir: str = "version3/test_data", flush: bool = False):
+def get_existing_ids(collection) -> set:
+    """Get all existing chunk IDs from the collection."""
+    try:
+        # Get all IDs from collection
+        result = collection.get(include=[])
+        return set(result['ids']) if result['ids'] else set()
+    except Exception:
+        return set()
+
+
+def main(pdf_dir: str = "version3/test_data", flush: bool = False, resume: bool = True):
     """
     Main ingestion function.
     
     Args:
         pdf_dir: Directory containing PDFs to ingest
         flush: If True, delete existing collection before ingesting
+        resume: If True, skip already-ingested chunks (default: True)
     """
     print(f"{STATUS_ICONS['brain']} Privacy-Aware RAG Ingestion")
-    print(f"{STATUS_ICONS['info']} Using LLM-based classification\n")
+    print(f"{STATUS_ICONS['info']} Using LLM-based classification")
+    if resume and not flush:
+        print(f"{STATUS_ICONS['info']} Resume mode: will skip existing chunks\n")
+    else:
+        print()
     
     # Initialize ChromaDB
     print(f"{STATUS_ICONS['progress']} Connecting to ChromaDB at {CHROMA_HOST}:{CHROMA_PORT}...")
@@ -187,7 +216,16 @@ def main(pdf_dir: str = "version3/test_data", flush: bool = False):
                 pass  # Collection doesn't exist, that's fine
         
         collection = chroma_client.get_or_create_collection(name=COLLECTION_NAME)
-        print(f"{STATUS_ICONS['success']} Connected to collection: {COLLECTION_NAME}\n")
+        existing_count = collection.count()
+        print(f"{STATUS_ICONS['success']} Connected to collection: {COLLECTION_NAME} ({existing_count} existing chunks)\n")
+        
+        # Get existing IDs for resume mode
+        existing_ids = set()
+        if resume and not flush and existing_count > 0:
+            print(f"{STATUS_ICONS['progress']} Loading existing chunk IDs...")
+            existing_ids = get_existing_ids(collection)
+            print(f"{STATUS_ICONS['success']} Found {len(existing_ids)} existing chunks to skip\n")
+        
     except Exception as e:
         print(f"{STATUS_ICONS['error']} Failed to connect to ChromaDB: {e}")
         print(f"Make sure ChromaDB is running: docker-compose up -d")
@@ -211,18 +249,24 @@ def main(pdf_dir: str = "version3/test_data", flush: bool = False):
     total_public = 0
     total_internal = 0
     total_confidential = 0
+    skipped_count = 0
     
     for pdf_path in pdf_paths:
-        chunks, pub, inter, conf = ingest_pdf(pdf_path, classifier, collection, pdf_dir)
+        chunks, pub, inter, conf, skipped = ingest_pdf(
+            pdf_path, classifier, collection, pdf_dir, existing_ids
+        )
         total_docs += chunks
         total_public += pub
         total_internal += inter
         total_confidential += conf
+        skipped_count += skipped
     
     # Print summary
     print(f"\n{STATUS_ICONS['complete']} Ingestion Complete!")
     print(f"\n{STATUS_ICONS['info']} Summary:")
-    print(f"   Total chunks: {total_docs}")
+    print(f"   New chunks: {total_docs}")
+    if skipped_count > 0:
+        print(f"   Skipped (already existed): {skipped_count}")
     print(f"   🟢 PUBLIC: {total_public} ({total_public/total_docs*100:.1f}%)" if total_docs > 0 else "   🟢 PUBLIC: 0")
     print(f"   🟡 INTERNAL: {total_internal} ({total_internal/total_docs*100:.1f}%)" if total_docs > 0 else "   🟡 INTERNAL: 0")
     print(f"   🔒 CONFIDENTIAL: {total_confidential} ({total_confidential/total_docs*100:.1f}%)" if total_docs > 0 else "   🔒 CONFIDENTIAL: 0")
