@@ -61,14 +61,10 @@ class ContentClassifier:
         for attempt in range(max_retries):
             try:
                 response = requests.post(
-                    f"{self.ollama_base}/api/generate",
+                    f"{self.ollama_base}/llm",
                     json={
                         "model": self.model,
                         "prompt": prompt,
-                        "stream": False,
-                        "options": {
-                            "temperature": 0.1,  # Low temperature for consistent classification
-                        }
                     },
                     headers=self.headers,
                     timeout=timeout,

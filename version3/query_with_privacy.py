@@ -35,10 +35,10 @@ def get_embedding(text: str) -> list[float]:
     """Get embedding vector for query."""
     try:
         response = requests.post(
-            f"{OLLAMA_BASE}/api/embeddings",
+            f"{OLLAMA_BASE}/embed",
             json={
                 "model": EMBED_MODEL,
-                "prompt": text[:500]  # Truncate for embedding
+                "text": text[:500]  # Truncate for embedding
             },
             headers=HEADERS,
             timeout=30
@@ -150,14 +150,10 @@ def query_with_role(
         system_prompt = QUERY_SYSTEM_PROMPT.format(context=context)
         
         response = requests.post(
-            f"{OLLAMA_BASE}/api/generate",
+            f"{OLLAMA_BASE}/llm",
             json={
                 "model": DEFAULT_MODEL,
                 "prompt": f"{system_prompt}\n\nUser Question: {query}\n\nAnswer:",
-                "stream": False,
-                "options": {
-                    "temperature": 0.7,
-                }
             },
             headers=HEADERS,
             timeout=120

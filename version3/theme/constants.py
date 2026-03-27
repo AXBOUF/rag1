@@ -104,17 +104,18 @@ Context:
 
 Answer the user's question based ONLY on the above context."""
 
-# Chunk size for document processing
-CHUNK_SIZE = 1000
-CHUNK_OVERLAP = 200
-
-# ChromaDB collection name
-COLLECTION_NAME = "privacy_aware_vectors"
-
-# API configuration (override with .env)
-OLLAMA_BASE = "http://www.munalbaraili.com"
-CHROMA_HOST = "localhost"
-CHROMA_PORT = 8000
-API_KEY = "mysecretkey"
-DEFAULT_MODEL = "qwen2.5:7b"
-EMBED_MODEL = "mxbai-embed-large:latest"
+# Import configuration from config.py
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config import (
+    OLLAMA_BASE,
+    CHROMA_HOST,
+    CHROMA_PORT,
+    API_KEY,
+    DEFAULT_MODEL,
+    EMBED_MODEL,
+    CHUNK_SIZE,
+    CHUNK_OVERLAP,
+    COLLECTION_NAME,
+)

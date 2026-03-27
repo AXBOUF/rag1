@@ -47,10 +47,10 @@ def get_embedding(text: str) -> list[float]:
     
     try:
         response = requests.post(
-            f"{OLLAMA_BASE}/api/embeddings",
+            f"{OLLAMA_BASE}/embed",
             json={
                 "model": EMBED_MODEL,
-                "prompt": text_for_embedding
+                "text": text_for_embedding
             },
             headers=HEADERS,
             timeout=30
