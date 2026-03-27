@@ -56,11 +56,35 @@ CUSTOM_CSS = """
         visibility: hidden;
     }
     
-    /* Ensure sidebar toggle is always visible */
+    /* Sidebar toggle button - always visible and styled */
     [data-testid="collapsedControl"] {
         display: flex !important;
         visibility: visible !important;
-        color: var(--apple-text) !important;
+        position: fixed !important;
+        left: 0.5rem !important;
+        top: 0.7rem !important;
+        z-index: 999999 !important;
+        background: var(--apple-surface) !important;
+        border: 1px solid var(--apple-border) !important;
+        border-radius: 8px !important;
+        padding: 0.5rem !important;
+        cursor: pointer !important;
+    }
+    
+    [data-testid="collapsedControl"] svg {
+        fill: var(--apple-text) !important;
+        width: 20px !important;
+        height: 20px !important;
+    }
+    
+    [data-testid="collapsedControl"]:hover {
+        background: var(--apple-surface-elevated) !important;
+        border-color: var(--apple-blue) !important;
+    }
+    
+    /* When sidebar is open, hide the collapsed control */
+    [data-testid="stSidebar"][aria-expanded="true"] ~ [data-testid="collapsedControl"] {
+        opacity: 0;
     }
     
     /* Global background */
@@ -331,7 +355,93 @@ CUSTOM_CSS = """
     [data-testid="stMetricLabel"] {
         color: var(--apple-text-secondary) !important;
     }
+    
+    /* Custom sidebar toggle button - always accessible */
+    .sidebar-toggle-btn {
+        position: fixed !important;
+        left: 12px !important;
+        top: 12px !important;
+        z-index: 999999 !important;
+        background: var(--apple-surface) !important;
+        border: 1px solid var(--apple-border) !important;
+        border-radius: 8px !important;
+        padding: 8px 12px !important;
+        cursor: pointer !important;
+        color: var(--apple-text) !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        display: none;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-toggle-btn:hover {
+        background: var(--apple-surface-elevated) !important;
+        border-color: var(--apple-blue) !important;
+    }
 </style>
+
+<script>
+(function() {
+    // Check if sidebar is collapsed and show toggle button
+    function checkSidebar() {
+        const sidebar = document.querySelector('[data-testid="stSidebar"]');
+        const toggleBtn = document.getElementById('custom-sidebar-toggle');
+        
+        if (!toggleBtn) return;
+        
+        // Check if sidebar is hidden/collapsed
+        if (sidebar) {
+            const sidebarStyle = window.getComputedStyle(sidebar);
+            const sidebarWidth = sidebar.getBoundingClientRect().width;
+            
+            if (sidebarWidth < 50 || sidebarStyle.display === 'none') {
+                toggleBtn.style.display = 'block';
+            } else {
+                toggleBtn.style.display = 'none';
+            }
+        }
+    }
+    
+    // Create toggle button
+    function createToggleButton() {
+        if (document.getElementById('custom-sidebar-toggle')) return;
+        
+        const btn = document.createElement('button');
+        btn.id = 'custom-sidebar-toggle';
+        btn.className = 'sidebar-toggle-btn';
+        btn.innerHTML = 'Menu';
+        btn.onclick = function() {
+            // Find and click the native Streamlit sidebar toggle
+            const nativeToggle = document.querySelector('[data-testid="collapsedControl"]');
+            if (nativeToggle) {
+                nativeToggle.click();
+            } else {
+                // Fallback: try to expand sidebar directly
+                const sidebar = document.querySelector('[data-testid="stSidebar"]');
+                if (sidebar) {
+                    sidebar.style.width = '21rem';
+                    sidebar.style.display = 'flex';
+                }
+            }
+            btn.style.display = 'none';
+        };
+        document.body.appendChild(btn);
+    }
+    
+    // Initialize
+    setTimeout(function() {
+        createToggleButton();
+        checkSidebar();
+        
+        // Monitor for changes
+        const observer = new MutationObserver(checkSidebar);
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+        
+        // Also check periodically
+        setInterval(checkSidebar, 500);
+    }, 1000);
+})();
+</script>
 """
 
 def get_sensitivity_color(level: str) -> str:
