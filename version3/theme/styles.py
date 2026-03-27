@@ -1,44 +1,54 @@
 """
 Design system styles and constants for version3 privacy-aware RAG.
-Clean minimal dark theme with emerald accent.
+Apple-inspired dark theme with clean, minimal aesthetics.
 """
 
-# Color Palette
+# Apple Dark Mode Color Palette
 COLORS = {
-    # Primary
-    "background": "#1f1f23",
-    "surface": "#2d2d31",
-    "border": "#374151",
-    "accent": "#10b981",
+    # Primary backgrounds
+    "background": "#000000",           # Pure black (Apple dark bg)
+    "surface": "#1c1c1e",              # Elevated surface
+    "surface_elevated": "#2c2c2e",     # Cards, modals
+    "border": "#38383a",               # Subtle borders
+    
+    # Accent (Apple Blue)
+    "accent": "#0a84ff",               # Apple blue
+    "accent_hover": "#409cff",         # Lighter on hover
     
     # Text
-    "text_primary": "#e5e7eb",
-    "text_secondary": "#9ca3af",
-    "text_disabled": "#6b7280",
+    "text_primary": "#f5f5f7",         # Primary text (Apple off-white)
+    "text_secondary": "#86868b",       # Secondary text
+    "text_tertiary": "#48484a",        # Disabled/muted
     
     # Semantic
-    "success": "#34d399",
-    "error": "#ef4444",
-    "warning": "#f59e0b",
-    "info": "#3b82f6",
+    "success": "#30d158",              # Apple green
+    "error": "#ff453a",                # Apple red
+    "warning": "#ffd60a",              # Apple yellow
+    "info": "#0a84ff",                 # Apple blue
     
-    # Sensitivity Levels
-    "public": "#10b981",
-    "internal": "#f59e0b",
-    "confidential": "#ef4444",
+    # Sensitivity Levels (Apple-style)
+    "public": "#30d158",               # Apple green
+    "internal": "#ff9f0a",             # Apple orange
+    "confidential": "#ff453a",         # Apple red
 }
 
-# Custom CSS for Streamlit
+# Custom CSS for Streamlit - Apple Dark Theme
 CUSTOM_CSS = """
 <style>
-    /* Global variables */
+    /* Apple Dark Mode Variables */
     :root {
-        --primary: #10b981;
-        --bg: #1f1f23;
-        --surface: #2d2d31;
-        --border: #374151;
-        --text: #e5e7eb;
-        --text-secondary: #9ca3af;
+        --apple-black: #000000;
+        --apple-surface: #1c1c1e;
+        --apple-surface-elevated: #2c2c2e;
+        --apple-border: #38383a;
+        --apple-blue: #0a84ff;
+        --apple-blue-hover: #409cff;
+        --apple-text: #f5f5f7;
+        --apple-text-secondary: #86868b;
+        --apple-green: #30d158;
+        --apple-red: #ff453a;
+        --apple-orange: #ff9f0a;
+        --apple-yellow: #ffd60a;
     }
     
     /* Hide Streamlit branding */
@@ -46,127 +56,280 @@ CUSTOM_CSS = """
         visibility: hidden;
     }
     
-    /* Page background */
+    /* Ensure sidebar toggle is always visible */
+    [data-testid="collapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        color: var(--apple-text) !important;
+    }
+    
+    /* Global background */
     .stApp {
-        background-color: var(--bg);
+        background-color: var(--apple-black);
+    }
+    
+    /* Main content area */
+    .main .block-container {
+        background-color: var(--apple-black);
+        padding-top: 2rem;
+    }
+    
+    /* Sidebar - Apple style */
+    [data-testid="stSidebar"] {
+        background-color: var(--apple-surface) !important;
+        border-right: 1px solid var(--apple-border);
+    }
+    
+    [data-testid="stSidebar"] > div:first-child {
+        background-color: var(--apple-surface);
+    }
+    
+    /* Sidebar header */
+    [data-testid="stSidebar"] .stMarkdown h1,
+    [data-testid="stSidebar"] .stMarkdown h2,
+    [data-testid="stSidebar"] .stMarkdown h3 {
+        color: var(--apple-text);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+    
+    /* All text */
+    .stMarkdown, .stText, p, span, label {
+        color: var(--apple-text);
+    }
+    
+    /* Secondary text */
+    .stCaption, caption, small {
+        color: var(--apple-text-secondary) !important;
     }
     
     /* Chat messages */
     .stChatMessage {
-        border-radius: 12px;
-        padding: 12px 16px;
-        margin-bottom: 8px;
+        background-color: var(--apple-surface);
+        border-radius: 18px;
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        border: none;
     }
     
-    /* User message styling */
     [data-testid="stChatMessageContent"] {
-        background-color: var(--surface);
+        background-color: transparent;
     }
     
-    /* Sidebar */
-    [data-testid="stSidebar"] {
-        background-color: var(--surface);
-        border-right: 1px solid var(--border);
+    /* User message */
+    [data-testid="stChatMessage"][data-testid*="user"] {
+        background-color: var(--apple-blue);
+    }
+    
+    /* Chat input */
+    .stChatInputContainer {
+        background-color: var(--apple-surface) !important;
+        border: 1px solid var(--apple-border);
+        border-radius: 22px;
+    }
+    
+    .stChatInputContainer textarea {
+        background-color: transparent !important;
+        color: var(--apple-text) !important;
+        border: none !important;
     }
     
     /* Input fields */
-    .stTextInput input, .stTextArea textarea {
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        color: var(--text);
+    .stTextInput input, 
+    .stTextArea textarea,
+    .stNumberInput input {
+        background-color: var(--apple-surface-elevated) !important;
+        border: 1px solid var(--apple-border) !important;
+        border-radius: 10px !important;
+        color: var(--apple-text) !important;
+        padding: 12px 16px !important;
     }
     
-    .stTextInput input:focus, .stTextArea textarea:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 1px var(--primary);
-    }
-    
-    /* Buttons */
-    .stButton button {
-        background-color: var(--primary);
-        color: var(--bg);
-        border-radius: 6px;
-        border: none;
-        font-weight: 500;
-        transition: all 0.2s;
-    }
-    
-    .stButton button:hover {
-        background-color: #059669;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    .stTextInput input:focus, 
+    .stTextArea textarea:focus {
+        border-color: var(--apple-blue) !important;
+        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3) !important;
     }
     
     /* Select boxes */
-    .stSelectbox select {
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        color: var(--text);
+    .stSelectbox > div > div {
+        background-color: var(--apple-surface-elevated) !important;
+        border: 1px solid var(--apple-border) !important;
+        border-radius: 10px !important;
+        color: var(--apple-text) !important;
     }
     
-    /* Cards */
-    .card {
-        background-color: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
+    .stSelectbox [data-baseweb="select"] {
+        background-color: var(--apple-surface-elevated);
+    }
+    
+    /* Buttons - Apple style pill buttons */
+    .stButton button {
+        background-color: var(--apple-blue) !important;
+        color: white !important;
+        border-radius: 980px !important;
+        border: none !important;
+        font-weight: 500 !important;
+        padding: 12px 24px !important;
+        transition: all 0.2s ease !important;
+        letter-spacing: -0.01em;
+    }
+    
+    .stButton button:hover {
+        background-color: var(--apple-blue-hover) !important;
+        transform: scale(1.02);
+    }
+    
+    .stButton button:active {
+        transform: scale(0.98);
+    }
+    
+    /* File uploader */
+    .stFileUploader {
+        background-color: var(--apple-surface-elevated);
+        border: 2px dashed var(--apple-border);
+        border-radius: 12px;
+        padding: 20px;
+    }
+    
+    .stFileUploader:hover {
+        border-color: var(--apple-blue);
+    }
+    
+    /* Progress bar */
+    .stProgress > div > div {
+        background-color: var(--apple-blue) !important;
+        border-radius: 4px;
+    }
+    
+    /* Dividers */
+    hr, .stDivider {
+        border-color: var(--apple-border) !important;
+        opacity: 0.5;
+    }
+    
+    /* Expanders */
+    .streamlit-expanderHeader {
+        background-color: var(--apple-surface-elevated) !important;
+        border-radius: 10px !important;
+        color: var(--apple-text) !important;
+    }
+    
+    .streamlit-expanderContent {
+        background-color: var(--apple-surface) !important;
+        border: 1px solid var(--apple-border);
+        border-radius: 0 0 10px 10px;
+    }
+    
+    /* Alerts/Info boxes */
+    .stAlert {
+        background-color: var(--apple-surface-elevated) !important;
+        border: 1px solid var(--apple-border) !important;
+        border-radius: 12px !important;
+        color: var(--apple-text) !important;
+    }
+    
+    /* Success message */
+    .stSuccess {
+        background-color: rgba(48, 209, 88, 0.1) !important;
+        border-color: var(--apple-green) !important;
+    }
+    
+    /* Error message */
+    .stError {
+        background-color: rgba(255, 69, 58, 0.1) !important;
+        border-color: var(--apple-red) !important;
+    }
+    
+    /* Warning message */
+    .stWarning {
+        background-color: rgba(255, 214, 10, 0.1) !important;
+        border-color: var(--apple-yellow) !important;
+    }
+    
+    /* Info message */
+    .stInfo {
+        background-color: rgba(10, 132, 255, 0.1) !important;
+        border-color: var(--apple-blue) !important;
+    }
+    
+    /* Checkbox */
+    .stCheckbox label span {
+        color: var(--apple-text) !important;
     }
     
     /* Badges */
     .badge {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 4px;
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 12px;
+        border-radius: 980px;
         font-size: 12px;
         font-weight: 500;
         margin-right: 8px;
+        letter-spacing: -0.01em;
     }
     
     .badge-public {
-        background-color: rgba(16, 185, 129, 0.2);
-        color: #34d399;
-        border: 1px solid #10b981;
+        background-color: rgba(48, 209, 88, 0.15);
+        color: #30d158;
+        border: 1px solid rgba(48, 209, 88, 0.3);
     }
     
     .badge-internal {
-        background-color: rgba(245, 158, 11, 0.2);
-        color: #fbbf24;
-        border: 1px solid #f59e0b;
+        background-color: rgba(255, 159, 10, 0.15);
+        color: #ff9f0a;
+        border: 1px solid rgba(255, 159, 10, 0.3);
     }
     
     .badge-confidential {
-        background-color: rgba(239, 68, 68, 0.2);
-        color: #f87171;
-        border: 1px solid #ef4444;
+        background-color: rgba(255, 69, 58, 0.15);
+        color: #ff453a;
+        border: 1px solid rgba(255, 69, 58, 0.3);
     }
-    
-    /* Status indicators */
-    .status-success { color: #34d399; }
-    .status-error { color: #ef4444; }
-    .status-warning { color: #f59e0b; }
-    .status-info { color: #3b82f6; }
     
     /* Code blocks */
     code {
-        background-color: var(--surface);
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-family: 'JetBrains Mono', 'Courier New', monospace;
-        font-size: 13px;
-    }
-    
-    /* Dividers */
-    hr {
-        border-color: var(--border);
-        margin: 24px 0;
-    }
-    
-    /* Expander */
-    .streamlit-expanderHeader {
-        background-color: var(--surface);
+        background-color: var(--apple-surface-elevated);
+        padding: 3px 8px;
         border-radius: 6px;
+        font-family: 'SF Mono', 'Menlo', monospace;
+        font-size: 13px;
+        color: var(--apple-text);
+    }
+    
+    /* Scrollbar - Apple style thin */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: var(--apple-black);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: var(--apple-border);
+        border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--apple-text-secondary);
+    }
+    
+    /* Spinner */
+    .stSpinner > div {
+        border-color: var(--apple-blue) transparent transparent transparent !important;
+    }
+    
+    /* Metrics */
+    [data-testid="stMetricValue"] {
+        color: var(--apple-text) !important;
+        font-weight: 600;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: var(--apple-text-secondary) !important;
     }
 </style>
 """

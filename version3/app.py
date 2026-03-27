@@ -44,6 +44,28 @@ st.set_page_config(
 # Apply custom CSS
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
+# Additional CSS to ensure sidebar toggle is always accessible
+st.markdown("""
+<style>
+    /* Force sidebar toggle to be visible */
+    button[kind="header"] {
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    /* Sidebar collapse button styling */
+    [data-testid="baseButton-header"] {
+        color: #f5f5f7 !important;
+        background-color: #1c1c1e !important;
+        border-radius: 8px !important;
+    }
+    
+    [data-testid="baseButton-header"]:hover {
+        background-color: #2c2c2e !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 
 # Initialize session state
 if "role" not in st.session_state:

@@ -1,8 +1,9 @@
 [theme]
-primaryColor = "#10b981"
-backgroundColor = "#1f1f23"
-secondaryBackgroundColor = "#2d2d31"
-textColor = "#e5e7eb"
+# Apple Dark Mode Palette
+primaryColor = "#0a84ff"
+backgroundColor = "#000000"
+secondaryBackgroundColor = "#1c1c1e"
+textColor = "#f5f5f7"
 font = "sans serif"
 
 [client]
