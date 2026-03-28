@@ -142,14 +142,23 @@ def query_with_role(
         
         # Build context for LLM
         context = "\n\n---\n\n".join([
-            f"Document: {meta['filename']} (page {meta['page']})\n{doc}"
+            f"Document: {meta['filename']} (page {meta['page']}) [Sensitivity: {meta.get('sensitivity_level', 'unknown').upper()}]\n{doc}"
             for doc, meta in zip(documents, metadatas)
         ])
+        
+        # Determine required role for restricted actions
+        required_role = "Manager or Admin"
+        if role_lower == "manager":
+            required_role = "Admin"
         
         # Generate response with LLM
         print(f"\n{STATUS_ICONS['brain']} Generating response...")
         
-        system_prompt = QUERY_SYSTEM_PROMPT.format(context=context)
+        system_prompt = QUERY_SYSTEM_PROMPT.format(
+            context=context,
+            role_upper=role.upper(),
+            required_role=required_role
+        )
         
         response = requests.post(
             f"{OLLAMA_BASE}/llm",
