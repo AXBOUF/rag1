@@ -78,7 +78,7 @@ def show_login():
                     justify-content: center; font-size: 28px;">
                     R
                 </div>
-                <h2 style="color: #f5f5f7; margin: 0; font-weight: 600;">Welcome Back</h2>
+                <h2 style="color: #f5f5f7; margin: 0; font-weight: 600;">RAG ANYTHING</h2>
                 <p style="color: #86868b; font-size: 14px; margin-top: 8px;">Sign in to continue</p>
             </div>
         """, unsafe_allow_html=True)
