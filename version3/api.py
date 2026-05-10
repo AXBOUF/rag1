@@ -65,11 +65,11 @@ app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 # Request/Response models
 class LoginRequest(BaseModel):
-    username: str
+    username: str  # Accepts email or username
     password: str
 
 class RegisterRequest(BaseModel):
-    username: str
+    username: str  # Expects email format
     password: str
     role: str = "employee"
 

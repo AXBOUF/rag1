@@ -51,13 +51,13 @@ def register_user(username: str, password: str, role: str = "employee") -> Tuple
     """
     if not username or not password:
         return False, "Username and password required"
-    
+
     if len(username) < 3:
         return False, "Username must be at least 3 characters"
-    
-    if len(password) < 4:
-        return False, "Password must be at least 4 characters"
-    
+
+    if len(password) < 1:
+        return False, "Password required"
+
     if role not in ["employee", "manager", "admin"]:
         return False, "Invalid role"
     
